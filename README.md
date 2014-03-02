@@ -1,12 +1,14 @@
 # kmpatch
-### KMPlayer advertisement is annoying!
+### KMPlayer's advertisement is annoying!
 ##### So we remove them :P
 
 
 Usage:
+
 `kmpatch.py [options] file1 file2 ...`
 
 Example:
+
 `kmpatch.py -au KMPlayer.exe`
 
 Options:
