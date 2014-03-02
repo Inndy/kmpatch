@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import sys
+import sys, os
 
 OPTIONS = [
     [ "no-ads", "a", "Remove advertisement" ],
@@ -31,25 +31,25 @@ def parse_cmd():
     return (new_flags, files)
 
 def usage():
-    print "Usage: %s [options] file1 file2 ..." % sys.argv[0]
+    print "Usage: %s [options] file1 file2 ..." % os.path.basename(sys.argv[0])
     print "\noptions:"
     for opt in OPTIONS:
         print "    --%-10s,-%-4s%s" % tuple(opt)
 
 def do_patch(fileobj, signature, content, description):
     print " -> Patching for %s..." % description
-    last = 0
+    last = -1
     fileobj.seek(0)
     body = fileobj.read()
     while True:
-        pos = body.find(signature, last)
+        pos = body.find(signature, last + 1)
         if pos == -1:
             break
         print " -----> Patch at 0x%.8X" % pos
         fileobj.seek(pos)
         fileobj.write(content)
         last = pos
-    if last == 0:
+    if last == -1:
         print " -----> Patch failed"
 
 def patch(file, remove_ad, remove_update):
@@ -59,8 +59,12 @@ def patch(file, remove_ad, remove_update):
         print "Error occurred while opening file '%s'" % file
         return False
     print "File --- %s" % file
-    do_patch(f, AD_DATA, AD_PATCH, "advertisement")
-    do_patch(f, UP_DATA, UP_PATCH, "update checking")
+    if not remove_ad and not remove_update:
+        print " -> Are you kidding me...? Nothing to do!!!"
+    if remove_ad:
+        do_patch(f, AD_DATA, AD_PATCH, "advertisement")
+    if remove_update:
+        do_patch(f, UP_DATA, UP_PATCH, "update checking")
 
 def main():
     if len(sys.argv) < 2:
