@@ -6,6 +6,9 @@
 Usage:
 `kmpatch.py [options] file1 file2 ...`
 
+Example:
+`kmpatch.py -au KMPlayer.exe`
+
 Options:
 
  - `--no-ads` or `-a`
