@@ -36,6 +36,22 @@ def usage():
     for opt in OPTIONS:
         print "    --%-10s,-%-4s%s" % tuple(opt)
 
+def do_patch(fileobj, signature, content, description):
+    print " -> Patching for %s..." % description
+    last = 0
+    fileobj.seek(0)
+    body = fileobj.read()
+    while True:
+        pos = body.find(signature, last)
+        if pos == -1:
+            break
+        print " -----> Patch at 0x%.8X" % pos
+        fileobj.seek(pos)
+        fileobj.write(content)
+        last = pos
+    if last == 0:
+        print " -----> Patch failed"
+
 def patch(file, remove_ad, remove_update):
     try:
         f = open(file, "r+b")
@@ -43,35 +59,8 @@ def patch(file, remove_ad, remove_update):
         print "Error occurred while opening file '%s'" % file
         return False
     print "File --- %s" % file
-    (offset_ad, offset_update, offset_ad_patch, offset_update_patch) = status(f)
-    print " -> Advertisement is %s for patch (0x%.8X)" % ("available" if offset_ad > -1 else "unavailable", offset_ad & 0xFFFFFFFF)
-    if offset_ad_patch > -1:
-        print " -> This file seems to be patched at 0x%.8X (Advertisement)" % (offset_ad_patch & 0xFFFFFFFF)
-    if remove_ad:
-        if offset_ad > -1:
-            print " -> Removing advertisement..."
-            f.seek(offset_ad)
-            f.write(AD_PATCH)
-            print " -> Advertisement removed!"
-        else:
-            print " -> Can't find advertisement signature"
-    print " -> Update checking is %s for patch (0x%.8X)" % ("available" if offset_update > -1 else "unavailable", offset_update & 0xFFFFFFFF)
-    if offset_update_patch > -1:
-        print " -> This file seems to be patched at 0x%.8X (Update checking)" % (offset_update_patch & 0xFFFFFFFF)
-    if remove_update:
-        if offset_update > -1:
-            print " -> Removing update checking..."
-            f.seek(offset_update)
-            f.write(UP_PATCH)
-            print " -> Update checking removed!"
-        else:
-            print " -> Can't find update checking signature"
-    return True
-
-def status(fileobj):
-    fileobj.seek(0)
-    content = fileobj.read()
-    return (content.find(AD_DATA), content.find(UP_DATA), content.find(AD_PATCH), content.find(UP_PATCH))
+    do_patch(f, AD_DATA, AD_PATCH, "advertisement")
+    do_patch(f, UP_DATA, UP_PATCH, "update checking")
 
 def main():
     if len(sys.argv) < 2:
